@@ -8,8 +8,10 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
-
+import android.graphics.Color;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.view.animation.Animation;
@@ -34,6 +36,8 @@ public class Compass extends AppCompatActivity implements SensorEventListener {
     private boolean lastMagnetometerSet;
     float rMat[] = new float[9];
     float orientation[] = new float[9];
+    private float LOWPASS_FACTOR = 0.25f;
+    ConstraintLayout backgroundColor;
 
 
     @Override
@@ -43,6 +47,7 @@ public class Compass extends AppCompatActivity implements SensorEventListener {
 
         compassimage =  findViewById(R.id.compass);
         DegreeValues =  findViewById(R.id.values);
+        backgroundColor = findViewById(R.id.background);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -73,12 +78,12 @@ public class Compass extends AppCompatActivity implements SensorEventListener {
         }
 
         if(event.sensor.getType()==Sensor.TYPE_MAGNETIC_FIELD){
-            System.arraycopy(event.values, 0, lastMagnetometer,0, event.values.length);
+            System.arraycopy(lowPass(event.values, lastMagnetometer), 0, lastMagnetometer,0, event.values.length);
             lastMagnetometerSet = true;
         }
 
         if(event.sensor.getType()==Sensor.TYPE_ACCELEROMETER){
-            System.arraycopy(event.values,0,lastAccelerometer,0,event.values.length);
+            System.arraycopy(lowPass(event.values, lastAccelerometer),0,lastAccelerometer,0,event.values.length);
             lastAccelerometerSet = true;
         }
 
@@ -98,12 +103,34 @@ public class Compass extends AppCompatActivity implements SensorEventListener {
         compassimage.startAnimation(rotation);
         DegreeStart = -azimuth;
 
+        if(azimuth >= 345 || azimuth <= 15){  //north
+            backgroundColor.setBackgroundColor(Color.CYAN);
+        }
+        else if (azimuth >=75 && azimuth <=105){ //west
+            backgroundColor.setBackgroundColor(Color.MAGENTA);
+        }
+        else if (azimuth >=165 && azimuth <=195){ //south
+            backgroundColor.setBackgroundColor(Color.YELLOW);
+        }
+        else if (azimuth >=255 && azimuth <=285){ //east
+            backgroundColor.setBackgroundColor(Color.GREEN);
+        }
+
 
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+
+    protected float[] lowPass (float[] input, float[] output) {
+        if (output == null)
+            return input;
+        for (int i = 0; i < input.length; i++) {
+            output[i] += LOWPASS_FACTOR * (input[i] - output[i]);
+        }
+        return output;
     }
 
 

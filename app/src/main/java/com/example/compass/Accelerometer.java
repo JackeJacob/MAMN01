@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -15,6 +16,7 @@ public class Accelerometer extends AppCompatActivity implements SensorEventListe
     Sensor accelerometer;
     float x, y, z;
     TextView acceleration;
+    MediaPlayer highValue, lowValue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,6 +27,9 @@ public class Accelerometer extends AppCompatActivity implements SensorEventListe
         sensorManager.registerListener(Accelerometer.this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
         acceleration = findViewById(R.id.accelerate);
+
+        highValue = MediaPlayer.create(Accelerometer.this, R.raw.highvalue);
+        lowValue = MediaPlayer.create(Accelerometer.this, R.raw.lowvalue);
     }
 
     @Override
@@ -33,6 +38,16 @@ public class Accelerometer extends AppCompatActivity implements SensorEventListe
         y = sensorEvent.values[1];
         z = sensorEvent.values[2];
         acceleration.setText("X: " + x +"\nY: " + y + "\nZ: " + z);
+        playSound();
+    }
+
+    private void playSound() {
+        if(y > 3 && x > 3 && z > 3){
+            highValue.start();
+        }
+       else if(y< 0 && x < 0 && z < 0){
+            lowValue.start();
+        }
     }
 
     @Override
